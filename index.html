@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STARTER LAB</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+  <link rel="stylesheet" href="style.css?v=battle-13">
+  <script src="script.js?v=battle-13" defer></script>
+</head>
+<body>
+  <main>
+    <header id="top">
+      <p class="eyebrow" id="generation-label">GENERATION 01</p>
+      <h1>STARTER LAB</h1>
+      <p>스타팅 포켓몬과 타입 상성을 탐색하는 실험실</p>
+          <div class="menus">
+        <label for="generation">세대 바꾸기</label>
+        <select id="generation"><option value="1">1세대</option><option value="2">2세대</option><option value="3">3세대</option><option value="4">4세대</option><option value="5">5세대</option><option value="6">6세대</option><option value="7">7세대</option><option value="8">8세대</option><option value="9">9세대</option></select>
+      </div>
+    </header>
+
+    <div class="lab-layout">
+      <section id="starters" class="stage" aria-labelledby="stage-title">
+        <h2 id="stage-title">스타팅 포켓몬</h2>
+        <div class="choices" aria-label="스타팅 포켓몬 선택">
+          <button type="button" aria-pressed="true">이상해씨</button>
+          <button type="button" aria-pressed="false">파이리</button>
+          <button type="button" aria-pressed="false">꼬부기</button>
+        </div>
+        <div class="battle-hud">
+          <label for="pokemon-hp"><span id="hp-value">20 / 20</span></label>
+          <progress id="pokemon-hp" aria-label="스타팅 체력" max="20" value="20" data-health="safe"></progress>
+        </div>
+        <div class="playfield">
+          <div class="opponent" hidden>
+            <img class="opponent-sprite" alt="" draggable="false">
+          </div>
+          <div class="opponent-hud" hidden>
+              <label for="opponent-hp"><span id="opponent-hp-value">20 / 20</span></label>
+              <progress id="opponent-hp" aria-label="공격자 체력" max="20" value="20" data-health="safe"></progress>
+            </div>
+          <div id="attack-effect" aria-hidden="true"></div>
+          <div class="specimen"><img class="starter-sprite" draggable="false" alt="" hidden></div>
+          <span class="encounter-grass" aria-hidden="true"></span>
+          <span class="capture-ball" aria-hidden="true" hidden></span>
+        </div>
+        <p>포켓몬을 끌어 보세요 · 놓으면 원래 자리로 돌아옵니다</p>
+        <p id="battle-message" role="status"></p>
+        <p id="selection" aria-live="polite">이상해씨 · 풀 / 독</p>
+            <div class="capture-controls">
+          <h3>포켓몬을 잡아보세요</h3>
+          <button type="button" id="throw-ball">몬스터볼 던지기</button>
+          <p id="capture-result" role="status"></p>
+        </div>
+      </section>
+      <section class="matchups" aria-labelledby="matchup-title">
+        <h2 id="matchup-title">타입 상성</h2>
+        <p>현재 타입 상성 기준 · 세대 메뉴는 포켓몬 목록을 바꿉니다.</p>
+        <div id="matchup-tables"></div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">
+
+    <div class="footer-inner">
+      <div>
+        <a class="footer-brand" href="#top">STARTER LAB</a>
+        <p><a href="https://github.com/kimyeounmu2000-glitch">GitHub</a></p>
+      </div>
+      <img class="great-ball" draggable="false" src="img/great-ball.svg" alt="" width="160" height="160">
+      <nav aria-label="푸터 메뉴">
+        <h2>EXPLORE</h2>
+        <a href="#starters">스타팅 포켓몬 탐색</a>
+        <a href="#top">맨 위로 ↑</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
