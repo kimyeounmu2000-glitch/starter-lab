@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STARTER LAB</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
-  <link rel="stylesheet" href="style.css?v=battle-13">
-  <script src="script.js?v=battle-13" defer></script>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/battle.css">
+  <script src="js/data.js" defer></script>
+  <script src="js/battle.js" defer></script>
+  <script src="js/main.js" defer></script>
 </head>
 <body>
   <main>
@@ -14,7 +18,7 @@
       <p class="eyebrow" id="generation-label">GENERATION 01</p>
       <h1>STARTER LAB</h1>
       <p>스타팅 포켓몬과 타입 상성을 탐색하는 실험실</p>
-          <div class="menus">
+      <div class="menus">
         <label for="generation">세대 바꾸기</label>
         <select id="generation"><option value="1">1세대</option><option value="2">2세대</option><option value="3">3세대</option><option value="4">4세대</option><option value="5">5세대</option><option value="6">6세대</option><option value="7">7세대</option><option value="8">8세대</option><option value="9">9세대</option></select>
       </div>
@@ -48,7 +52,7 @@
         <p>포켓몬을 끌어 보세요 · 놓으면 원래 자리로 돌아옵니다</p>
         <p id="battle-message" role="status"></p>
         <p id="selection" aria-live="polite">이상해씨 · 풀 / 독</p>
-            <div class="capture-controls">
+        <div class="capture-controls">
           <h3>포켓몬을 잡아보세요</h3>
           <button type="button" id="throw-ball">몬스터볼 던지기</button>
           <p id="capture-result" role="status"></p>
@@ -78,38 +82,3 @@
   </footer>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
