@@ -2,7 +2,7 @@
   "use strict";
   const scriptUrl = document.currentScript.src;
   const tile = 48;
-  const effectDurationScale = 1.3;
+  const effectDurationScale = 1.625;
   const styles = {
     "gold-silver": { flight: 4, impact: 3, generation: 2 },
     "diamond-pearl": { flight: 7, impact: 5, generation: 4 },
