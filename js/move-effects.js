@@ -2,6 +2,7 @@
   "use strict";
   const scriptUrl = document.currentScript.src;
   const tile = 48;
+  const effectDurationScale = 1.3;
   const styles = {
     "gold-silver": { flight: 4, impact: 3, generation: 2 },
     "diamond-pearl": { flight: 7, impact: 5, generation: 4 },
@@ -97,7 +98,7 @@
           canvas.style.transform = "translate(0, -50%)";
           canvas.style.transformOrigin = "0 0";
         }
-        return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, move.duration ?? 245, signal, (t) => {
+        return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, (move.duration ?? 245) * effectDurationScale, signal, (t) => {
           if (move.beam) return [0, 0];
           const remaining = 1 - t;
           const reach = move.reach ?? 1;
@@ -119,7 +120,7 @@
         canvas.style.rotate = "";
         canvas.style.transform = "";
         canvas.style.transformOrigin = "";
-        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, 175, signal, () => [0, 0]);
+        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, 175 * effectDurationScale, signal, () => [0, 0]);
       },
     };
   }

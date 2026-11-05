@@ -249,7 +249,7 @@
 
 .move-frames {
   position: absolute;
-  width: clamp(3.75rem, 13vw, 6rem);
+  width: clamp(4.875rem, 16.9vw, 7.8rem);
   height: auto;
   transform: translate(-50%, -50%);
   image-rendering: pixelated;
@@ -265,4 +265,4 @@
 }
 .effect-picker p { font-size: 0.8rem; }
 
-.move-frames.move-beam { height: 4rem; }
+.move-frames.move-beam { height: 5.2rem; }
