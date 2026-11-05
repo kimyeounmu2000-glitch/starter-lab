@@ -271,3 +271,40 @@
   0%, 65% { opacity: 1; }
   66%, 100% { opacity: 0.25; }
 }
+
+/* Thin pixel HP meters: keep both fighters' values above the 8px track. */
+:is(#pokemon-hp, #opponent-hp),
+.has-opponent :is(#pokemon-hp, #opponent-hp) {
+  height: 8px;
+  border: 2px solid #202127;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+}
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-bar {
+  background: #dcdde2;
+  border-radius: 0;
+}
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-value {
+  border-radius: 0;
+  background: repeating-linear-gradient(to right, transparent 0 6px, #20212740 6px 7px), var(--hp-color);
+}
+:is(#pokemon-hp, #opponent-hp)::-moz-progress-bar {
+  border-radius: 0;
+  background: repeating-linear-gradient(to right, transparent 0 6px, #20212740 6px 7px), var(--hp-color);
+}
+.battle-hud label, .opponent-hud label,
+.has-opponent :is(.battle-hud, .opponent-hud) label {
+  inset: auto 0 calc(100% + 4px);
+  height: 14px;
+  padding: 0;
+}
+
+.battle-hud label, .opponent-hud label,
+.has-opponent :is(.battle-hud, .opponent-hud) label {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.battle-hud { margin-top: 2rem; }
