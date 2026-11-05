@@ -106,10 +106,8 @@ def frame(move,index,count,style,impact):
             d.line((x-2,y,x+2,y),fill="#8ccde7")
             d.line((x,y-2,x,y+2),fill="#efffff")
     elif move=="벌레":
-        for i in range(3):
-            x=15+i*6;y=14+i*10
-            d.polygon([(x-10,y+4),(x+13,y),(x-7,y-3),(x-4,y)],fill="#f3efb7",outline="#739344")
-            d.line((x-8,y+1,x+8,y),fill="#fffce4")
+        d.polygon([(5,32),(43,17),(21,33),(12,37)],fill="#eef1bf",outline="#719345")
+        d.line((9,32,36,20),fill="#fffce4",width=2)
     elif move in ("악","독"):
         gap=round((1-t)*13) if not impact else 0
         d.line((3,13-gap,45,13-gap),fill="#615169",width=3)

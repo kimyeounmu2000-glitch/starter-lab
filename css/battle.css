@@ -246,3 +246,28 @@
 .effect-picker p { font-size: 0.8rem; }
 
 .move-frames.move-beam { height: 6.24rem; }
+
+
+
+
+
+
+
+.electric-branches {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.electric-arcs {
+  position: absolute;
+  width: clamp(12rem, 38vw, 21rem);
+  height: auto;
+  transform: translate(-42%, -50%);
+  image-rendering: pixelated;
+  animation: electric-arcs-flash 180ms steps(2, end) infinite;
+}
+@keyframes electric-arcs-flash {
+  0%, 65% { opacity: 1; }
+  66%, 100% { opacity: 0.25; }
+}

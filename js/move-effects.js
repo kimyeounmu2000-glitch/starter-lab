@@ -21,7 +21,7 @@
     땅: { arc: 25, duration: 300 },
     비행: { duration: 300, passThrough: true },
     에스퍼: { beam: true, duration: 450 },
-    벌레: { reach: 0.45, duration: 300 },
+    벌레: { duration: 300, passThrough: true },
     바위: { reach: 0, duration: 350 },
     고스트: { reach: 0, duration: 350, sweepUp: true },
     드래곤: { beam: true, duration: 500, since: 4 },
@@ -34,7 +34,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=radial-moves-6", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=electric-horn-7", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
@@ -85,6 +85,52 @@
     });
   }
 
+  function makeLightning(container, x, y, dx, dy) {
+    const pixelSize = 4;
+    const padding = 32;
+    const left = Math.min(x, x + dx) - padding;
+    const top = Math.min(y, y + dy) - padding;
+    const canvas = document.createElement("canvas");
+    canvas.className = "electric-branches";
+    canvas.width = Math.ceil((Math.abs(dx) + padding * 2) / pixelSize);
+    canvas.height = Math.ceil((Math.abs(dy) + padding * 2) / pixelSize);
+    canvas.style.left = left + "px";
+    canvas.style.top = top + "px";
+    canvas.style.width = canvas.width * pixelSize + "px";
+    canvas.style.height = canvas.height * pixelSize + "px";
+    container.append(canvas);
+    const context = canvas.getContext("2d");
+    const startX = (x + dx - left) / pixelSize;
+    const startY = (y + dy - top) / pixelSize;
+    const endX = (x - left) / pixelSize;
+    const endY = (y - top) / pixelSize;
+
+    return (progress) => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const phase = Math.floor(progress * 8);
+      if (phase === 0 || phase === 3 || phase === 6) return;
+      for (let branch = -1; branch <= 1; branch += 1) {
+        const points = [];
+        for (let step = 0; step <= 8; step += 1) {
+          const fraction = step / 8;
+          const jitter = step > 0 && step < 8
+            ? ((step + phase) % 2 ? 1 : -1) * (3 + Math.abs(branch) * 2) : 0;
+          points.push([
+            Math.round(startX + (endX - startX) * fraction + branch * 7 * Math.sin(Math.PI * fraction)),
+            Math.round(startY + (endY - startY) * fraction + jitter),
+          ]);
+        }
+        context.beginPath();
+        points.forEach(([px, py], index) => index ? context.lineTo(px, py) : context.moveTo(px, py));
+        context.strokeStyle = "#e6a719";
+        context.lineWidth = 3;
+        context.stroke();
+        context.strokeStyle = "#fff5a6";
+        context.lineWidth = 1;
+        context.stroke();
+      }
+    };
+  }
   function prepare(type, styleKey, container, x, y, dx, dy, signal) {
     const style = styles[styleKey];
     const move = moves[type];
@@ -98,6 +144,34 @@
     canvas.style.top = anchorY + "px";
     container.append(canvas);
     const sheet = loadSheet(styleKey);
+    if (type === "전기") {
+      const arcs = document.createElement("canvas");
+      arcs.className = "electric-arcs";
+      arcs.width = 128;
+      arcs.height = 96;
+      arcs.style.left = (x + dx) + "px";
+      arcs.style.top = (y + dy) + "px";
+      const paint = arcs.getContext("2d");
+      const direction = Math.sign(-dx) || 1;
+      const lines = [
+        [[0,-9],[10,-18],[8,-23],[20,-25],[17,-33],[30,-39]],
+        [[0,7],[13,13],[10,20],[24,19],[21,29],[34,34]],
+        [[7,0],[17,-4],[22,2],[33,-6],[38,-2],[48,-12]],
+      ];
+      for (const points of lines) {
+        paint.beginPath();
+        points.forEach(([px,py], index) => {
+          const pointX = 54 + px * direction;
+          if (index === 0) paint.moveTo(pointX, 48 + py);
+          else paint.lineTo(pointX, 48 + py);
+        });
+        paint.strokeStyle = "#ffd52c";
+        paint.lineWidth = 2;
+        paint.stroke();
+      }
+      container.append(arcs);
+    }
+    const drawLightning = type === "전기" ? makeLightning(container, x, y, dx, dy) : null;
     return {
       async flight() {
         if (move.beam) {
