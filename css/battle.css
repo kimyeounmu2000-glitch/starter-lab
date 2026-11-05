@@ -97,9 +97,46 @@
   image-rendering: pixelated;
 }
 
+.playfield.has-opponent {
+  --starter-x: 74%;
+  --starter-y: 33%;
+
+  min-height: max(20rem, 24vw);
+}
+.has-opponent .specimen {
+  position: absolute;
+  left: var(--starter-x);
+  top: var(--starter-y);
+  translate: -50% -50%;
+  width: var(--fighter-size);
+}
+.has-opponent .capture-ball { left: var(--starter-x); top: var(--starter-y); }
+.has-opponent .encounter-grass {
+  left: var(--starter-x);
+  top: calc(var(--starter-y) + 2rem);
+  translate: -50% 0;
+}
+.opponent {
+  position: absolute;
+  top: 66%;
+  left: 27%;
+  width: var(--fighter-size);
+  transform: translate(-50%, -50%);
+}
+.opponent-sprite {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.opponent-sprite.is-fainted { filter: grayscale(1); opacity: 0.45; }
+
+.playfield { --fighter-size: min(clamp(12.74rem, 47.32vw, 20.02rem), 48%); }
+
 .battle-hud { width: min(85%, 18rem); margin: 1.25rem auto 0; }
 .battle-hud label { display: flex; justify-content: space-between; font-size: 0.9rem; }
-#pokemon-hp {
+:is(#pokemon-hp, #opponent-hp) {
   --hp-color: #278341;
   appearance: none;
   width: 100%;
@@ -107,11 +144,11 @@
   border: 2px solid #202127;
   background: #dcdde2;
 }
-#pokemon-hp[data-health="warning"] { --hp-color: #d77a12; }
-#pokemon-hp[data-health="critical"] { --hp-color: #c6263d; }
-#pokemon-hp::-webkit-progress-bar { background: #dcdde2; }
-#pokemon-hp::-webkit-progress-value { background: var(--hp-color); }
-#pokemon-hp::-moz-progress-bar { background: var(--hp-color); }
+:is(#pokemon-hp, #opponent-hp)[data-health="warning"] { --hp-color: #d77a12; }
+:is(#pokemon-hp, #opponent-hp)[data-health="critical"] { --hp-color: #c6263d; }
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-bar { background: #dcdde2; }
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-value { background: var(--hp-color); }
+:is(#pokemon-hp, #opponent-hp)::-moz-progress-bar { background: var(--hp-color); }
 .specimen.is-fainted { filter: grayscale(1); opacity: 0.45; }
 #battle-message { min-height: 1.5em; }
 
