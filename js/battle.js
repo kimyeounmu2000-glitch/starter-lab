@@ -28,7 +28,7 @@
       }
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + (width + 1) * 2
         + '" height="14" viewBox="0 0 ' + (width + 1) + ' 7" shape-rendering="crispEdges">'
-        + '<path d="' + path + '" stroke="#202127" stroke-width="0.8" fill="white"/></svg>';
+        + '<path d="' + path + '" fill="white"/></svg>';
       healthSprites.set(text, 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');
     }
     return healthSprites.get(text);
