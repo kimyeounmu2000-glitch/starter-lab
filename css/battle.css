@@ -299,12 +299,6 @@
   left: 71%;
   transform: translate(-50%, -50%);
 }
-.has-opponent :is(.battle-hud, .opponent-hud) label { justify-content: end; font-size: inherit; }
-.has-opponent :is(#pokemon-hp, #opponent-hp) {
-  box-sizing: border-box;
-  display: block;
-  height: 0.65rem;
-}
 .playfield > .opponent-hud[hidden] { display: none; }
 .playfield.is-entering :is(.battle-hud, .opponent-hud),
 .playfield:has(.specimen.is-dragging) .battle-hud { visibility: hidden; }
@@ -349,4 +343,18 @@
   grid-area: 1 / 1;
   width: 0.65rem;
   image-rendering: pixelated;
+}
+
+
+[data-pixel-health] {
+  min-width: 3.25rem;
+  height: 14px;
+  color: transparent;
+  text-shadow: none;
+  background-position: right center;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+@media (forced-colors: active) {
+  [data-pixel-health] { background: none; color: CanvasText; }
 }

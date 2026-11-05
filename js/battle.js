@@ -3,6 +3,37 @@
 
   const { moves, attackers, spriteBase, effectSprites } = window.StarterLab.data;
 
+  // Each glyph is a 3 × 5 bitmap, ordered from 0 to 9, then slash.
+  const healthGlyphs = [
+    "111101101101111", "010110010010111", "111001111100111", "111001111001111",
+    "101101111001001", "111100111001111", "111100111101111", "111001010010010",
+    "111101111101111", "111101111001111", "001001010100100",
+  ];
+  const healthSprites = new Map();
+
+  function healthSprite(text) {
+    if (!healthSprites.has(text)) {
+      let path = "";
+      let width = 0;
+      for (const character of text) {
+        if (character === " ") {
+          width += 2;
+          continue;
+        }
+        const glyph = healthGlyphs[character === "/" ? 10 : Number(character)];
+        [...glyph].forEach((pixel, index) => {
+          if (pixel === "1") path += "M" + (width + index % 3 + 1) + " " + (Math.floor(index / 3) + 1) + "h1v1h-1z";
+        });
+        width += 4;
+      }
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + (width + 1) * 2
+        + '" height="14" viewBox="0 0 ' + (width + 1) + ' 7" shape-rendering="crispEdges">'
+        + '<path d="' + path + '" stroke="#202127" stroke-width="0.8" fill="white"/></svg>';
+      healthSprites.set(text, 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');
+    }
+    return healthSprites.get(text);
+  }
+
   window.StarterLab.createBattle = ({ specimen, generation, choices }) => {
     const grass = document.querySelector(".encounter-grass");
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -33,11 +64,19 @@
       return ratio <= 0.1 ? "critical" : ratio <= 0.5 ? "warning" : "safe";
     }
 
+    function renderHealth(meter, label, value) {
+      meter.value = value;
+      meter.dataset.health = healthColor(value);
+      const text = value + " / " + maxHP;
+      if (label.dataset.pixelHealth === text) return;
+      label.textContent = text;
+      label.dataset.pixelHealth = text;
+      label.style.backgroundImage = healthSprite(text);
+    }
+
     function setOpponentHP(value) {
       opponentHP = value;
-      opponentMeter.value = value;
-      opponentValue.textContent = value + " / " + maxHP;
-      opponentMeter.dataset.health = healthColor(value);
+      renderHealth(opponentMeter, opponentValue, value);
       opponentSprite.classList.toggle("is-fainted", value === 0);
     }
 
@@ -84,15 +123,12 @@
 
     function setHP(value) {
       hp = value;
-      hpMeter.value = hp;
-      hpValue.textContent = hp + " / " + maxHP;
-      hpMeter.dataset.health = healthColor(hp);
+      renderHealth(hpMeter, hpValue, hp);
       specimen.classList.toggle("is-fainted", hp === 0);
       throwButton.disabled = hp === 0;
     }
 
     function resetHP() {
-      activeAttack?.abort();
       setHP(maxHP);
       battleMessage.textContent = "";
       attackEffect.replaceChildren();
@@ -215,9 +251,7 @@
         function update(now) {
           const progress = Math.min(1, (now - start) / 260);
           const value = Math.ceil(from + (to - from) * progress);
-          meter.value = value;
-          meter.dataset.health = healthColor(value);
-          label.textContent = value + " / " + maxHP;
+          renderHealth(meter, label, value);
           if (progress === 1) finish();
           else frame = requestAnimationFrame(update);
         }
