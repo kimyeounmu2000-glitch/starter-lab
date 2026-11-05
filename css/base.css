@@ -1,0 +1,17 @@
+:root {
+  font-family: Galmuri11, monospace;
+  color: #20252d;
+  background: #f6f7f9;
+}
+
+body {
+  --ball-top: #c6263d;
+  --ball-bottom: #fffdf8;
+  --ball-band: #202127;
+  --theme: var(--ball-top);
+  margin: 0;
+  background: var(--ball-bottom);
+  font-size: 1.0625rem;
+}
+
+button, select { font-family: inherit; }
