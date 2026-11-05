@@ -13,7 +13,7 @@
     노말: { reach: 0, duration: 90 },
     불꽃: { reach: 0, duration: 300 },
     물: { duration: 600, beam: true },
-    전기: { reach: 0, duration: 300 },
+    전기: { reach: 0, duration: 300, atSource: true },
     풀: { duration: 300, since: 7, passThrough: true },
     얼음: { reach: 0, duration: 350 },
     격투: { reach: 0, duration: 300 },
@@ -34,7 +34,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=sweep-moves-5", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=radial-moves-6", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
@@ -89,11 +89,13 @@
     const style = styles[styleKey];
     const move = moves[type];
     const row = rows.indexOf(type);
+    const anchorX = move.atSource ? x + dx : x;
+    const anchorY = move.atSource ? y + dy : y;
     const canvas = document.createElement("canvas");
     canvas.className = "move-frames";
     canvas.width = canvas.height = tile;
-    canvas.style.left = x + "px";
-    canvas.style.top = y + "px";
+    canvas.style.left = anchorX + "px";
+    canvas.style.top = anchorY + "px";
     container.append(canvas);
     const sheet = loadSheet(styleKey);
     return {
@@ -125,8 +127,8 @@
       async impact() {
         canvas.classList.remove("move-beam");
         canvas.style.width = "";
-        canvas.style.left = x + "px";
-        canvas.style.top = y + "px";
+        canvas.style.left = anchorX + "px";
+        canvas.style.top = anchorY + "px";
         canvas.style.rotate = "";
         canvas.style.transform = "";
         canvas.style.transformOrigin = "";

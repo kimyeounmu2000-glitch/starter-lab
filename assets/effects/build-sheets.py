@@ -56,7 +56,11 @@ def frame(move,index,count,style,impact):
         # Angular stepped waves, drawn on the integer grid.
         for ring in range(2):
             q=max(2,r-ring*5)
-            d.line([(24-q,20),(24-q,14),(20,24-q),(28,24-q),(24+q,14),(24+q,28),(28,24+q),(20,24+q),(24-q,28),(24-q,20)],fill="#ffe23e" if ring==0 else "#fff4a5",width=2)
+            d.ellipse((24-q,24-q,24+q,24+q),outline="#ffe23e" if ring==0 else "#fff4a5",width=2)
+        for i in range(detail+2):
+            angle=i*math.pi*2/(detail+2)
+            x,y=24+round(math.cos(angle)*r),24+round(math.sin(angle)*r)
+            d.line([(x-2,y-3),(x+1,y),(x-1,y+1),(x+2,y+3)],fill="#fff39b")
     elif move=="격투":
         if not impact:
             y=3+round(t*18)
@@ -128,8 +132,8 @@ def frame(move,index,count,style,impact):
         mask=heart.getchannel("A")
         stripes=Image.new("RGBA",heart.size)
         stripe_draw=ImageDraw.Draw(stripes)
-        for stripe_y in (9,21):
-            stripe_draw.rectangle((0,stripe_y,39,stripe_y+4),fill="#fff8fb")
+        for radius in (7,16,25):
+            stripe_draw.ellipse((20-radius,18-radius,20+radius,18+radius),outline="#fff8fb",width=4)
         stripes.putalpha(Image.composite(stripes.getchannel("A"),Image.new("L",heart.size),mask))
         heart.alpha_composite(stripes)
         h=ImageDraw.Draw(heart)
