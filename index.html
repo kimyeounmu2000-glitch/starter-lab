@@ -7,9 +7,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/battle.css?v=pixel-health-1">
+  <link rel="stylesheet" href="css/battle.css?v=classic-frames-1">
   <script src="js/data.js" defer></script>
-  <script src="js/battle.js?v=pixel-health-1" defer></script>
+  <script src="js/move-effects.js" defer></script>
+  <script src="js/battle.js?v=classic-frames-1" defer></script>
   <script src="js/main.js" defer></script>
 </head>
 <body>
@@ -61,6 +62,15 @@
       <section class="matchups" aria-labelledby="matchup-title">
         <h2 id="matchup-title">타입 상성</h2>
         <p>현재 타입 상성 기준 · 세대 메뉴는 포켓몬 목록을 바꿉니다.</p>
+        <div class="effect-picker">
+          <label for="effect-style">공격 이펙트 스타일</label>
+          <select id="effect-style" aria-describedby="effect-note">
+            <option value="gold-silver">Gold / Silver</option>
+            <option value="diamond-pearl">Diamond / Pearl</option>
+            <option value="black-white" selected>Black / White</option>
+          </select>
+          <p id="effect-note">모든 효과는 자체 제작입니다. 해당 시대에 없던 기술은 창작 대체 연출로 표시합니다.</p>
+        </div>
         <div id="matchup-tables"></div>
       </section>
     </div>

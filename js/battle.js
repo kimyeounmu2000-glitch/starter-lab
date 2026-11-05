@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { moves, attackers, spriteBase, effectSprites } = window.StarterLab.data;
+  const { moves, attackers, spriteBase } = window.StarterLab.data;
 
   // Each glyph is a 3 × 5 bitmap, ordered from 0 to 9, then slash.
   const healthGlyphs = [
@@ -34,6 +34,8 @@
     return healthSprites.get(text);
   }
 
+  const { prepare, isAdaptation } = window.StarterLab.moveEffects;
+
   window.StarterLab.createBattle = ({ specimen, generation, choices }) => {
     const grass = document.querySelector(".encounter-grass");
     const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
@@ -46,6 +48,7 @@
     const hpValue = document.querySelector("#hp-value");
     const battleMessage = document.querySelector("#battle-message");
     const attackEffect = document.querySelector("#attack-effect");
+    const effectStyle = document.querySelector("#effect-style");
 
     let activeAttack;
 
@@ -134,13 +137,6 @@
       attackEffect.replaceChildren();
     }
 
-    const attackStyles = {
-      불꽃: { duration: 180, colors: ["#ff422c", "#ffb139"], burst: 5 },
-      물: { duration: 240, colors: ["#238cfc", "#b7efff"], burst: 6 },
-      풀: { duration: 260, colors: ["#3c9c39", "#d5ef83"], burst: 4, spin: true },
-      전기: { duration: 175, colors: ["#ffcf2f", "#fff6aa"], bolt: true },
-    };
-
     function animateAttack(element, frames, duration, signal, options = {}) {
       const animation = element.animate(frames, { duration, easing: "steps(8, end)", ...options });
       const cancel = () => animation.cancel();
@@ -150,25 +146,9 @@
       }).finally(() => signal.removeEventListener("abort", cancel));
     }
 
-    function makeParticle(type, colors) {
-      const sprite = document.createElement("canvas");
-      sprite.width = sprite.height = 7;
-      const paint = sprite.getContext("2d");
-      effectSprites[type].split("/").forEach((row, y) => {
-        [...row].forEach((pixel, x) => {
-          if (pixel === "0") return;
-          paint.fillStyle = colors[Number(pixel) - 1];
-          paint.fillRect(x, y, 1, 1);
-        });
-      });
-      return sprite;
-    }
-
-    async function showAttack(type, damage, outgoing, signal) {
+    async function showAttack(type, damage, outgoing, style, signal) {
       if (reducedMotion.matches) return;
-      const [, color, motion] = moves[type];
-      const style = attackStyles[type];
-      const colors = style?.colors ?? [color, "#fff2b8"];
+      const [, color] = moves[type];
       const source = outgoing ? specimen : opponentSprite;
       const target = outgoing ? opponentSprite : specimen;
       const scene = document.createElement("div");
@@ -179,32 +159,26 @@
       const destination = target.getBoundingClientRect();
       const dx = origin.left + origin.width / 2 - destination.left - destination.width / 2;
       const dy = origin.top + origin.height / 2 - destination.top - destination.height / 2;
-      const effect = document.createElement("div");
-      effect.className = style ? "attack-particles pixel-projectile" : "attack-particles " + motion;
-      const count = style?.bolt ? 1 : 3;
-      for (let index = 0; index < count; index += 1) effect.append(makeParticle(type, colors));
-      scene.append(effect);
+      const bounds = scene.getBoundingClientRect();
+      const x = destination.left + destination.width / 2 - bounds.left;
+      const y = destination.top + destination.height / 2 - bounds.top;
+      const frames = prepare(type, style, scene, x, y, dx, dy, signal);
 
       try {
-        const flight = style
-          ? [
-              { translate: dx + "px " + dy + "px", opacity: 0.5, rotate: "0deg" },
-              { translate: "0 0", opacity: 1, rotate: style.spin ? "210deg" : "0deg" },
-            ]
-          : [{ opacity: 0.4 }, { opacity: 1 }];
-        await animateAttack(effect, flight, style?.duration ?? 245, signal);
+        await frames.flight();
         if (signal.aborted || !damage) return;
 
-        effect.remove();
         const impact = document.createElement("div");
         impact.className = "pixel-hit";
         const spark = document.createElement("span");
         spark.className = "pixel-hit-spark";
-        if (style) spark.style.setProperty("--spark-edge", colors[0]);
+        spark.style.setProperty("--spark-edge", color);
+        impact.style.left = x + "px";
+        impact.style.top = y + "px";
         impact.append(spark);
         scene.append(impact);
 
-        const flicker = style?.bolt ? 0.15 : 0.6;
+        const flicker = type === "전기" ? 0.15 : 0.6;
         const push = Math.sign(-dx) * 5;
         const hit = animateAttack(target, [
           { filter: "brightness(2.4)", opacity: 1, translate: push + "px 0", offset: 0 },
@@ -220,19 +194,9 @@
         const flash = animateAttack(spark, [
           { scale: 0.35, opacity: 1 }, { scale: 0.8, opacity: flicker },
           { scale: 1, opacity: 1 }, { scale: 1.15, opacity: flicker },
-          { scale: 1.35, opacity: style?.bolt ? 1 : 0.3 }, { scale: 1.45, opacity: 0 },
+          { scale: 1.35, opacity: type === "전기" ? 1 : 0.3 }, { scale: 1.45, opacity: 0 },
         ], 175, signal);
-        const particles = Array.from({ length: style?.burst ?? 0 }, (_, index) => {
-          const particle = makeParticle(type, colors);
-          particle.className = "impact-particle";
-          impact.append(particle);
-          const angle = index / style.burst * Math.PI * 2;
-          return animateAttack(particle, [
-            { translate: "0", opacity: 1 },
-            { translate: Math.round(Math.cos(angle) * 34) + "px " + Math.round(Math.sin(angle) * 27) + "px", opacity: 0 },
-          ], 175, signal);
-        });
-        await Promise.all([hit, shake, flash, ...particles]);
+        await Promise.all([hit, shake, flash, frames.impact()]);
       } finally {
         scene.remove();
       }
@@ -417,8 +381,10 @@
         const damage = Math.min(currentHP, Math.round(5 * Number(factor)));
         const nextHP = currentHP - damage;
         const [move] = moves[moveType];
-        battleMessage.textContent = move + "!";
-        await showAttack(moveType, damage, Boolean(outgoing), signal);
+        const style = effectStyle.value;
+        const adaptation = isAdaptation(moveType, style) ? " · 창작 대체 연출" : "";
+        battleMessage.textContent = move + "!" + adaptation;
+        await showAttack(moveType, damage, Boolean(outgoing), style, signal);
         if (signal.aborted) return;
 
         // Keep gameplay HP authoritative while the visible meter counts down.
@@ -432,7 +398,7 @@
 
         battleMessage.textContent = move + (damage
           ? (nextHP === 0 ? " · 기절!" : "")
-          : " · 효과가 없어요.");
+          : " · 효과가 없어요.") + adaptation;
       } finally {
         if (activeAttack === controller) activeAttack = undefined;
       }

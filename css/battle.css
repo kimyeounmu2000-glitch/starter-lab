@@ -116,153 +116,13 @@
 #battle-message { min-height: 1.5em; }
 
 #attack-effect { position: absolute; z-index: 3; inset: 0; display: grid; place-items: center; pointer-events: none; }
-.attack-particles { font-size: clamp(1.75rem, 6vw, 3.75rem); font-weight: bold; text-shadow: 2px 2px white; animation: attack-pulse 460ms ease-out both; }
-.attack-particles.fall { animation-name: attack-fall; }
-.attack-particles.impact { animation-name: attack-impact; }
-.attack-particles.burst { animation-name: attack-burst; }
-.attack-particles.bite { animation-name: attack-bite; }
-@keyframes attack-pulse { from { scale: 0.3; } to { scale: 1.6; opacity: 0; } }
-@keyframes attack-fall { from { translate: 0 -5rem; } 65% { translate: 0 0; } to { opacity: 0; } }
-@keyframes attack-impact { from { scale: 0.6; rotate: -35deg; } 40% { scale: 1.25; rotate: 15deg; } to { opacity: 0; } }
-@keyframes attack-burst { 0%, 45% { opacity: 1; } 25%, 100% { opacity: 0; } 100% { scale: 1.5; } }
-@keyframes attack-bite { from { translate: 0 -2rem; letter-spacing: 1rem; } 45% { translate: 0 0; letter-spacing: 0; } to { opacity: 0; } }
-
-.attack-particles {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  animation-duration: 560ms;
-  animation-timing-function: steps(12, end);
-}
-.attack-particles canvas {
-  width: clamp(1.5rem, 6vw, 3.5rem);
-  height: auto;
-  image-rendering: pixelated;
-}
-.attack-particles canvas:nth-child(2) { scale: 1.45; translate: 0 -0.45rem; }
-.attack-particles canvas:nth-child(3) { scale: 0.75; translate: 0 0.65rem; }
-.attack-particles.burst canvas:first-child { rotate: -24deg; }
-.attack-particles.burst canvas:last-child { rotate: 25deg; }
-.attack-particles.fall canvas:first-child { translate: 0 -1.2rem; }
-.attack-particles.bite canvas:not(:nth-child(2)) { opacity: 0.55; }
-
 .attack-scene {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
 }
-.attack-scene .attack-particles {
-  position: absolute;
-  left: var(--starter-x, 50%);
-  top: var(--starter-y, 50%);
-  transform: translate(-50%, -50%);
-  animation-duration: 245ms;
-  animation-fill-mode: none;
-}
-.attack-scene.is-outgoing .attack-particles { left: 27%; top: 66%; }
-
-.battle-hud, .opponent-hud { font-family: inherit; }
-.playfield.has-opponent {
-  --starter-x: 74%;
-  --starter-y: 33%;
-
-  min-height: max(20rem, 24vw);
-}
-.has-opponent .specimen {
-  position: absolute;
-  left: var(--starter-x);
-  top: var(--starter-y);
-  translate: -50% -50%;
-  width: var(--fighter-size);
-}
-.has-opponent .capture-ball { left: var(--starter-x); top: var(--starter-y); }
-.has-opponent .encounter-grass {
-  left: var(--starter-x);
-  top: calc(var(--starter-y) + 2rem);
-  translate: -50% 0;
-}
-.opponent {
-  position: absolute;
-  top: 66%;
-  left: 27%;
-  width: var(--fighter-size);
-  transform: translate(-50%, -50%);
-}
-.opponent-sprite {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
-.opponent-sprite.is-fainted { filter: grayscale(1); opacity: 0.45; }
-.opponent-hud {
-  position: absolute;
-  top: 27%;
-  left: 78%;
-  width: clamp(4.5rem, 10vw, 6rem);
-  padding: 0.3rem;
-  background: #fffdf8;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  z-index: 1;
-}
-.opponent-hud label { display: flex; justify-content: space-between; gap: 0.25rem; }
-#opponent-hp {
-  --hp-color: #278341;
-  appearance: none;
-  display: block;
-  width: 100%;
-  height: 0.55rem;
-  border: 2px solid #202127;
-  background: #dcdde2;
-}
-#opponent-hp[data-health="warning"] { --hp-color: #d77a12; }
-#opponent-hp[data-health="critical"] { --hp-color: #c6263d; }
-#opponent-hp::-webkit-progress-bar { background: #dcdde2; }
-#opponent-hp::-webkit-progress-value { background: var(--hp-color); }
-#opponent-hp::-moz-progress-bar { background: var(--hp-color); }
-
-
-.has-opponent .battle-hud {
-  position: absolute;
-  z-index: 1;
-  top: calc(var(--starter-y) - 2rem);
-  right: calc(100% - var(--starter-x) + var(--fighter-size) * 0.28);
-  width: clamp(4.5rem, 14vw, 9rem);
-  margin: 0;
-  padding: 0.3rem;
-  background: #fffdf8;
-}
-.has-opponent .battle-hud label {
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.playfield { --fighter-size: min(clamp(12.74rem, 47.32vw, 20.02rem), 48%); }
-
-.attack-scene {
-  --hit-x: var(--starter-x, 50%);
-  --hit-y: var(--starter-y, 50%);
-  --approach-x: -7rem;
-  --approach-y: 2.5rem;
-}
-.attack-scene.is-outgoing {
-  --hit-x: 27%;
-  --hit-y: 66%;
-  --approach-x: 7rem;
-  --approach-y: -2.5rem;
-}
-.attack-scene .attack-particles.stream { animation-name: battle-projectile; }
-@keyframes battle-projectile {
-  0% { translate: var(--approach-x) 0; scale: 0.6; opacity: 0; }
-  15% { opacity: 1; }
-  55% { translate: 0 0; scale: 1.15; opacity: 1; }
-  100% { translate: 0 0; scale: 1.35; opacity: 0; }
-}
-.pixel-hit {
+.attack-scene .pixel-hit {
   position: absolute;
   left: var(--hit-x);
   top: var(--hit-y);
@@ -337,15 +197,6 @@
   .opponent-sprite { transition: none; }
 }
 
-.attack-scene .pixel-projectile { animation: none; }
-.pixel-projectile canvas { width: clamp(0.8rem, 3vw, 1.8rem); }
-.impact-particle {
-  grid-area: 1 / 1;
-  width: 0.65rem;
-  image-rendering: pixelated;
-}
-
-
 [data-pixel-health] {
   min-width: 3.25rem;
   height: 14px;
@@ -358,3 +209,21 @@
 @media (forced-colors: active) {
   [data-pixel-health] { background: none; color: CanvasText; }
 }
+
+.move-frames {
+  position: absolute;
+  width: clamp(3.75rem, 13vw, 6rem);
+  height: auto;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+}
+.effect-picker { margin-block: 1rem; }
+.effect-picker label { display: block; margin-bottom: 0.35rem; }
+.effect-picker select {
+  font: inherit;
+  color: inherit;
+  background: #fffdf8;
+  border: 1px solid #8c929e;
+  padding: 0.25rem;
+}
+.effect-picker p { font-size: 0.8rem; }
