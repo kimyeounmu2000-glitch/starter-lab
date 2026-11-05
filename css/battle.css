@@ -272,20 +272,17 @@
   66%, 100% { opacity: 0.25; }
 }
 
-/* Thin pixel HP meters: keep both fighters' values above the 8px track. */
+/* Compact pixel HP bars, retaining the original in-bar number placement. */
 :is(#pokemon-hp, #opponent-hp),
 .has-opponent :is(#pokemon-hp, #opponent-hp) {
-  height: 8px;
+  height: 14px;
   border: 2px solid #202127;
   border-radius: 0;
   box-shadow: none;
   padding: 0;
   overflow: hidden;
 }
-:is(#pokemon-hp, #opponent-hp)::-webkit-progress-bar {
-  background: #dcdde2;
-  border-radius: 0;
-}
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-bar { background: #dcdde2; border-radius: 0; }
 :is(#pokemon-hp, #opponent-hp)::-webkit-progress-value {
   border-radius: 0;
   background: repeating-linear-gradient(to right, transparent 0 6px, #20212740 6px 7px), var(--hp-color);
@@ -296,15 +293,11 @@
 }
 .battle-hud label, .opponent-hud label,
 .has-opponent :is(.battle-hud, .opponent-hud) label {
-  inset: auto 0 calc(100% + 4px);
-  height: 14px;
-  padding: 0;
-}
-
-.battle-hud label, .opponent-hud label,
-.has-opponent :is(.battle-hud, .opponent-hud) label {
+  inset: 0;
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  height: 14px;
+  padding: 0 4px;
 }
-.battle-hud { margin-top: 2rem; }
+[data-pixel-health] { min-width: 38px; height: 10px; background-size: auto 10px; }
