@@ -9,7 +9,7 @@
   };
   // Sheet rows follow this order. Angles and heights describe the projectile path.
   const moves = {
-    노말: { reach: 0.15 }, 불꽃: { reach: 0.25, duration: 180 }, 물: { duration: 240, beam: true },
+    노말: { reach: 0.15 }, 불꽃: { reach: 0.25, duration: 180 }, 물: { duration: 600, beam: true },
     전기: { reach: 0, duration: 175 },
     풀: { wave: 18, cycles: 1, duration: 260, since: 7 },
     얼음: { reach: 0, fall: 65 }, 격투: { reach: 0, fall: 20 },
@@ -24,7 +24,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=move-art-2", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=water-jet-3", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
@@ -45,7 +45,7 @@
     });
   }
 
-  function playFrames(canvas, image, row, first, count, duration, signal, position) {
+  function playFrames(canvas, image, row, first, count, duration, signal, position, updateFrame = () => {}) {
     const context = canvas.getContext("2d");
     const start = performance.now();
     let request;
@@ -64,6 +64,7 @@
           if (image) context.drawImage(image, (first + index) * tile, row * tile, tile, tile, 0, 0, tile, tile);
           const [x, y] = position(index / (count - 1));
           canvas.style.translate = Math.round(x) + "px " + Math.round(y) + "px";
+          updateFrame(index / (count - 1));
         }
         if (now - start >= duration) finish();
         else request = requestAnimationFrame(render);
@@ -89,9 +90,11 @@
       async flight() {
         if (move.beam) {
           canvas.classList.add("move-beam");
-          canvas.style.width = Math.round(Math.hypot(dx, dy)) + "px";
+          canvas.style.width = "0px";
+          canvas.style.left = x + dx + "px";
+          canvas.style.top = y + dy + "px";
           canvas.style.rotate = Math.atan2(-dy, -dx) + "rad";
-          canvas.style.transform = "translate(-100%, -50%)";
+          canvas.style.transform = "translate(0, -50%)";
           canvas.style.transformOrigin = "0 0";
         }
         return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, move.duration ?? 245, signal, (t) => {
@@ -101,11 +104,18 @@
           const arc = (move.arc ?? 0) * Math.sin(Math.PI * t);
           const wave = (move.wave ?? 0) * Math.sin(2 * Math.PI * (move.cycles ?? 1) * t) * remaining;
           return [dx * remaining * reach, (dy * reach - (move.fall ?? 0)) * remaining - arc + wave];
+        }, (progress) => {
+          if (!move.beam) return;
+          const length = Math.hypot(dx, dy);
+          const extension = type === "물" ? Math.min(1, Math.max(0.12, (progress - 0.1) / 0.6)) : Math.max(0.1, progress);
+          canvas.style.width = Math.round(length * extension) + "px";
         });
       },
       async impact() {
         canvas.classList.remove("move-beam");
         canvas.style.width = "";
+        canvas.style.left = x + "px";
+        canvas.style.top = y + "px";
         canvas.style.rotate = "";
         canvas.style.transform = "";
         canvas.style.transformOrigin = "";

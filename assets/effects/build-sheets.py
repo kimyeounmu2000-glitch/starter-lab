@@ -17,15 +17,24 @@ def frame(move, index, count, style, impact):
     d = ImageDraw.Draw(image)
     detail = 2 + style
     if move == "물":
-        for x in range(0,48,3):
-            wave = round(math.sin(x/7 + t*12)*2)
-            d.rectangle((x,17+wave,x+3,30+wave), fill="#2474d1")
-            d.rectangle((x,20+wave,x+3,24+wave), fill="#93eaff")
-        if impact:
-            for i in range(6):
-                a=i*math.pi/3
-                x,y=24+round(math.cos(a)*(7+13*t)),24+round(math.sin(a)*(7+13*t))
-                d.rectangle((x-2,y-3,x+2,y+2), fill="#68d4ff")
+        if not impact:
+            # Dense jet with a narrow mouth, broad crest and running highlights.
+            for x in range(0,48,2):
+                spread=3+round(x/48*6)
+                wave=round(math.sin(x/6-t*18)*1.5)
+                d.rectangle((x,24-spread+wave,x+2,24+spread+wave),fill="#258ee7")
+                d.rectangle((x,22-spread//3+wave,x+2,25+spread//3+wave),fill="#a6f4ff")
+                if (x//2+index)%5==0:
+                    d.rectangle((x,22+wave,x+3,24+wave),fill="#fff")
+        else:
+            # Water rises from the contact point then falls outwards.
+            for i in range(7):
+                spread=i-3
+                x=24+round(spread*(2+4*t))
+                y=29-round(math.sin(math.pi*t)*(15-abs(spread)*2))+round(t*spread*spread/2)
+                d.rectangle((x-2,y-5,x+2,y+2),fill="#3eb8f4")
+                d.rectangle((x-1,y-4,x+1,y),fill="#c6f9ff")
+            d.rectangle((12,32,36,34),fill="#78dcff")
     elif move in ("에스퍼","드래곤"):
         palette = ["#d44dc7","#6473e8","#78e6d9","#ffbd7c"] if move=="에스퍼" else ["#5440ad","#8c48d3","#4bd3ee","#eefbff"]
         for x in range(0,48,2):
