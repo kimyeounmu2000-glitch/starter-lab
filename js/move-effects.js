@@ -12,7 +12,7 @@
   const moves = {
     노말: { reach: 0, duration: 90 },
     불꽃: { reach: 0, duration: 300 },
-    물: { duration: 600, beam: true },
+    물: { duration: 600, impactDuration: 980, fixedTiming: true, beam: true },
     전기: { reach: 0, duration: 300, atSource: true },
     풀: { duration: 300, since: 7, passThrough: true },
     얼음: { reach: 0, duration: 350 },
@@ -24,7 +24,7 @@
     벌레: { duration: 300, passThrough: true },
     바위: { reach: 0, duration: 350 },
     고스트: { reach: 0, duration: 350, sweepUp: true },
-    드래곤: { beam: true, duration: 500, since: 4 },
+    드래곤: { beam: true, duration: 600, impactDuration: 980, fixedTiming: true, since: 4 },
     악: { reach: 0, duration: 300 },
     강철: { reach: 0, duration: 300 },
     페어리: { reach: 0, duration: 300, since: 6 },
@@ -34,7 +34,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=dragon-core-8", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=beam-timing-9", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
@@ -183,7 +183,7 @@
           canvas.style.transform = "translate(0, -50%)";
           canvas.style.transformOrigin = "0 0";
         }
-        return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, (move.duration ?? 245) * effectDurationScale, signal, (t) => {
+        return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, (move.duration ?? 245) * (move.fixedTiming ? 1 : effectDurationScale), signal, (t) => {
           if (move.beam) return [0, 0];
           if (move.sweepUp) return [0, 28 - 56 * t];
           const remaining = 1 - t;
@@ -206,7 +206,7 @@
         canvas.style.rotate = "";
         canvas.style.transform = "";
         canvas.style.transformOrigin = "";
-        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, 175 * effectDurationScale, signal, (t) => {
+        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, move.impactDuration ?? 175 * effectDurationScale, signal, (t) => {
           if (move.passThrough) return [-dx * 0.35 * t, -dy * 0.35 * t];
           return move.sweepUp ? [0, -28] : [0, 0];
         });
