@@ -148,7 +148,6 @@
 
     async function showAttack(type, damage, outgoing, style, signal) {
       if (reducedMotion.matches) return;
-      const [, color] = moves[type];
       const source = outgoing ? specimen : opponentSprite;
       const target = outgoing ? opponentSprite : specimen;
       const scene = document.createElement("div");
@@ -168,35 +167,15 @@
         await frames.flight();
         if (signal.aborted || !damage) return;
 
-        const impact = document.createElement("div");
-        impact.className = "pixel-hit";
-        const spark = document.createElement("span");
-        spark.className = "pixel-hit-spark";
-        spark.style.setProperty("--spark-edge", color);
-        impact.style.left = x + "px";
-        impact.style.top = y + "px";
-        impact.append(spark);
-        scene.append(impact);
-
-        const flicker = type === "전기" ? 0.15 : 0.6;
-        const push = Math.sign(-dx) * 5;
         const hit = animateAttack(target, [
-          { filter: "brightness(2.4)", opacity: 1, translate: push + "px 0", offset: 0 },
-          { filter: "brightness(1)", opacity: 0.2, translate: push / 2 + "px 0", offset: 0.23 },
-          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 0.43 },
-          { filter: "brightness(1)", opacity: 0.2, translate: "0", offset: 0.62 },
-          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 0.82 },
-          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 1 },
+          { filter: "brightness(2.4)", opacity: 1, offset: 0 },
+          { filter: "brightness(1)", opacity: 0.2, offset: 0.23 },
+          { filter: "brightness(1)", opacity: 1, offset: 0.43 },
+          { filter: "brightness(1)", opacity: 0.2, offset: 0.62 },
+          { filter: "brightness(1)", opacity: 1, offset: 0.82 },
+          { filter: "brightness(1)", opacity: 1, offset: 1 },
         ], 145, signal, { composite: "add" });
-        const shake = animateAttack(playfield, [
-          { translate: "0" }, { translate: "2px 0" }, { translate: "-2px 0" }, { translate: "0" },
-        ], 120, signal);
-        const flash = animateAttack(spark, [
-          { scale: 0.35, opacity: 1 }, { scale: 0.8, opacity: flicker },
-          { scale: 1, opacity: 1 }, { scale: 1.15, opacity: flicker },
-          { scale: 1.35, opacity: type === "전기" ? 1 : 0.3 }, { scale: 1.45, opacity: 0 },
-        ], 175, signal);
-        await Promise.all([hit, shake, flash, frames.impact()]);
+        await Promise.all([hit, frames.impact()]);
       } finally {
         scene.remove();
       }

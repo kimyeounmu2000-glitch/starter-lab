@@ -159,23 +159,6 @@
   display: grid;
   place-items: center;
 }
-.attack-scene .pixel-hit {
-  position: absolute;
-  left: var(--hit-x);
-  top: var(--hit-y);
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-}
-.pixel-hit > span { grid-area: 1 / 1; }
-.pixel-hit-spark {
-  width: clamp(1.75rem, 6vw, 3rem);
-  aspect-ratio: 1;
-  background: radial-gradient(#fff 20%, #ffe294 21% 46%, var(--spark-edge, #ff982f) 47%);
-  clip-path: polygon(40% 0, 60% 0, 60% 20%, 80% 20%, 80% 40%, 100% 40%, 100% 60%, 80% 60%, 80% 80%, 60% 80%, 60% 100%, 40% 100%, 40% 80%, 20% 80%, 20% 60%, 0 60%, 0 40%, 20% 40%, 20% 20%, 40% 20%);
-}
-
-
 .has-opponent .battle-hud, .has-opponent .opponent-hud {
   position: absolute;
   z-index: 1;
@@ -197,8 +180,6 @@
   transform: translate(-50%, -50%);
 }
 .playfield > .opponent-hud[hidden] { display: none; }
-.playfield.is-entering :is(.battle-hud, .opponent-hud),
-.playfield:has(.specimen.is-dragging) .battle-hud { visibility: hidden; }
 
 .battle-hud, .opponent-hud { position: relative; }
 .battle-hud label, .opponent-hud label,
@@ -229,7 +210,6 @@
   transition: transform 300ms ease-out;
 }
 .opponent-sprite.is-dragging { cursor: grabbing; transition: none; }
-.playfield:has(.opponent-sprite.is-dragging) .opponent-hud { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .opponent-sprite { transition: none; }
 }
