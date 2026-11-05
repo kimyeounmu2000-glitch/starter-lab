@@ -16,8 +16,7 @@
     const battleMessage = document.querySelector("#battle-message");
     const attackEffect = document.querySelector("#attack-effect");
 
-    let hitAnimation;
-    let lungeAnimation;
+    let activeAttack;
 
     let hp = maxHP;
     let opponentHP = maxHP;
@@ -42,7 +41,7 @@
       opponentSprite.classList.toggle("is-fainted", value === 0);
     }
 
-    async function selectOpponent(type) {
+    async function selectOpponent(type, signal) {
       if (type === opponentType) return;
       const firstEntrance = opponent.hidden;
       opponentType = type;
@@ -70,11 +69,14 @@
         ], timing));
       }
 
+      const cancelEntrance = () => animations.forEach((animation) => animation.cancel());
+      signal.addEventListener("abort", cancelEntrance, { once: true });
       enteringBattle = true;
       playfield.classList.add("is-entering");
       try {
         await Promise.allSettled(animations.map((animation) => animation.finished));
       } finally {
+        signal.removeEventListener("abort", cancelEntrance);
         enteringBattle = false;
         playfield.classList.remove("is-entering");
       }
@@ -90,67 +92,138 @@
     }
 
     function resetHP() {
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
+      activeAttack?.abort();
       setHP(maxHP);
       battleMessage.textContent = "";
       attackEffect.replaceChildren();
     }
 
-    function showAttack(type, damage, outgoing) {
-      const [, color, motion] = moves[type];
-      attackEffect.replaceChildren();
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
-      if (reducedMotion.matches) return;
+    const attackStyles = {
+      불꽃: { duration: 180, colors: ["#ff422c", "#ffb139"], burst: 5 },
+      물: { duration: 240, colors: ["#238cfc", "#b7efff"], burst: 6 },
+      풀: { duration: 260, colors: ["#3c9c39", "#d5ef83"], burst: 4, spin: true },
+      전기: { duration: 175, colors: ["#ffcf2f", "#fff6aa"], bolt: true },
+    };
 
+    function animateAttack(element, frames, duration, signal, options = {}) {
+      const animation = element.animate(frames, { duration, easing: "steps(8, end)", ...options });
+      const cancel = () => animation.cancel();
+      signal.addEventListener("abort", cancel, { once: true });
+      return animation.finished.catch((error) => {
+        if (!signal.aborted) throw error;
+      }).finally(() => signal.removeEventListener("abort", cancel));
+    }
+
+    function makeParticle(type, colors) {
+      const sprite = document.createElement("canvas");
+      sprite.width = sprite.height = 7;
+      const paint = sprite.getContext("2d");
+      effectSprites[type].split("/").forEach((row, y) => {
+        [...row].forEach((pixel, x) => {
+          if (pixel === "0") return;
+          paint.fillStyle = colors[Number(pixel) - 1];
+          paint.fillRect(x, y, 1, 1);
+        });
+      });
+      return sprite;
+    }
+
+    async function showAttack(type, damage, outgoing, signal) {
+      if (reducedMotion.matches) return;
+      const [, color, motion] = moves[type];
+      const style = attackStyles[type];
+      const colors = style?.colors ?? [color, "#fff2b8"];
       const source = outgoing ? specimen : opponentSprite;
       const target = outgoing ? opponentSprite : specimen;
       const scene = document.createElement("div");
       scene.className = outgoing ? "attack-scene is-outgoing" : "attack-scene";
       attackEffect.append(scene);
-      lungeAnimation = source.animate([
-        { translate: "0" },
-        { translate: outgoing ? "-1.6rem 0.6rem" : "1.6rem -0.6rem", offset: 0.45 },
-        { translate: "0" },
-      ], { duration: 420, easing: "steps(8, end)", composite: "add" });
+
+      const origin = source.getBoundingClientRect();
+      const destination = target.getBoundingClientRect();
+      const dx = origin.left + origin.width / 2 - destination.left - destination.width / 2;
+      const dy = origin.top + origin.height / 2 - destination.top - destination.height / 2;
       const effect = document.createElement("div");
-      effect.className = "attack-particles " + motion;
-      const sprite = document.createElement("canvas");
-      sprite.width = sprite.height = 7;
-      const paint = sprite.getContext("2d");
-      const palette = ["transparent", color, "#fff2b8"];
-      effectSprites[type].split("/").forEach((row, y) => {
-        [...row].forEach((pixel, x) => {
-          paint.fillStyle = palette[Number(pixel)];
-          paint.fillRect(x, y, 1, 1);
-        });
-      });
-      for (let index = 0; index < 3; index += 1) {
-        const particle = index === 0 ? sprite : sprite.cloneNode();
-        if (index > 0) particle.getContext("2d").drawImage(sprite, 0, 0);
-        effect.append(particle);
-      }
+      effect.className = style ? "attack-particles pixel-projectile" : "attack-particles " + motion;
+      const count = style?.bolt ? 1 : 3;
+      for (let index = 0; index < count; index += 1) effect.append(makeParticle(type, colors));
       scene.append(effect);
-      if (damage) {
+
+      try {
+        const flight = style
+          ? [
+              { translate: dx + "px " + dy + "px", opacity: 0.5, rotate: "0deg" },
+              { translate: "0 0", opacity: 1, rotate: style.spin ? "210deg" : "0deg" },
+            ]
+          : [{ opacity: 0.4 }, { opacity: 1 }];
+        await animateAttack(effect, flight, style?.duration ?? 245, signal);
+        if (signal.aborted || !damage) return;
+
+        effect.remove();
         const impact = document.createElement("div");
         impact.className = "pixel-hit";
         const spark = document.createElement("span");
         spark.className = "pixel-hit-spark";
+        if (style) spark.style.setProperty("--spark-edge", colors[0]);
         impact.append(spark);
         scene.append(impact);
-        effect.addEventListener("animationend", () => scene.remove(), { once: true });
-        const restingOpacity = (outgoing ? opponentHP : hp) === 0 ? 0.45 : 1;
-        hitAnimation = target.animate([
-          { opacity: restingOpacity, offset: 0 },
-          { opacity: 0.08, offset: 0.2 },
-          { opacity: restingOpacity, offset: 0.4 },
-          { opacity: 0.08, offset: 0.65 },
-          { opacity: restingOpacity, offset: 1 },
-        ], { duration: 320, delay: 330, easing: "steps(2, end)" });
-      } else {
-        effect.addEventListener("animationend", () => scene.remove(), { once: true });
+
+        const flicker = style?.bolt ? 0.15 : 0.6;
+        const push = Math.sign(-dx) * 5;
+        const hit = animateAttack(target, [
+          { filter: "brightness(2.4)", opacity: 1, translate: push + "px 0", offset: 0 },
+          { filter: "brightness(1)", opacity: 0.2, translate: push / 2 + "px 0", offset: 0.23 },
+          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 0.43 },
+          { filter: "brightness(1)", opacity: 0.2, translate: "0", offset: 0.62 },
+          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 0.82 },
+          { filter: "brightness(1)", opacity: 1, translate: "0", offset: 1 },
+        ], 145, signal, { composite: "add" });
+        const shake = animateAttack(playfield, [
+          { translate: "0" }, { translate: "2px 0" }, { translate: "-2px 0" }, { translate: "0" },
+        ], 120, signal);
+        const flash = animateAttack(spark, [
+          { scale: 0.35, opacity: 1 }, { scale: 0.8, opacity: flicker },
+          { scale: 1, opacity: 1 }, { scale: 1.15, opacity: flicker },
+          { scale: 1.35, opacity: style?.bolt ? 1 : 0.3 }, { scale: 1.45, opacity: 0 },
+        ], 175, signal);
+        const particles = Array.from({ length: style?.burst ?? 0 }, (_, index) => {
+          const particle = makeParticle(type, colors);
+          particle.className = "impact-particle";
+          impact.append(particle);
+          const angle = index / style.burst * Math.PI * 2;
+          return animateAttack(particle, [
+            { translate: "0", opacity: 1 },
+            { translate: Math.round(Math.cos(angle) * 34) + "px " + Math.round(Math.sin(angle) * 27) + "px", opacity: 0 },
+          ], 175, signal);
+        });
+        await Promise.all([hit, shake, flash, ...particles]);
+      } finally {
+        scene.remove();
       }
+    }
+
+    async function animateHealth(meter, label, from, to, signal) {
+      if (reducedMotion.matches || from === to || signal.aborted) return;
+      const start = performance.now();
+      await new Promise((resolve) => {
+        let frame;
+        function finish() {
+          cancelAnimationFrame(frame);
+          signal.removeEventListener("abort", finish);
+          resolve();
+        }
+        function update(now) {
+          const progress = Math.min(1, (now - start) / 260);
+          const value = Math.ceil(from + (to - from) * progress);
+          meter.value = value;
+          meter.dataset.health = healthColor(value);
+          label.textContent = value + " / " + maxHP;
+          if (progress === 1) finish();
+          else frame = requestAnimationFrame(update);
+        }
+        signal.addEventListener("abort", finish, { once: true });
+        frame = requestAnimationFrame(update);
+      });
     }
 
     let selectedName;
@@ -169,7 +242,7 @@
       const inBattlefield = playfield.contains(fighter);
       fighter.addEventListener("pointerdown", (event) => {
         if (drag || event.button !== 0) return;
-        if (inBattlefield && (enteringBattle || throwButton.disabled)) return;
+        if (inBattlefield && (activeAttack || enteringBattle || throwButton.disabled)) return;
         fighter.setPointerCapture(event.pointerId);
         const transform = getComputedStyle(fighter).transform;
         const { m41, m42 } = new DOMMatrixReadOnly(transform === "none" ? "" : transform);
@@ -204,9 +277,7 @@
     }
 
     async function throwBall() {
-      if (enteringBattle || drag || throwButton.disabled) return;
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
+      if (activeAttack || enteringBattle || drag || throwButton.disabled) return;
       attackEffect.replaceChildren();
       throwButton.disabled = true;
       generation.disabled = true;
@@ -290,36 +361,51 @@
 
     async function handleTypeAttack(event) {
       const button = event.target.closest(".type-attack");
-      if (!button || enteringBattle || drag || (throwButton.disabled && hp > 0)) return;
+      if (!button || activeAttack || enteringBattle || drag || (throwButton.disabled && hp > 0)) return;
       if (hp === 0) {
         battleMessage.textContent = "기절했어요. 스타팅 포켓몬을 다시 선택해 주세요.";
         return;
       }
 
       const { type, factor, moveType, outgoing } = button.dataset;
-      const starterAtSelection = selectedName;
-      await selectOpponent(type);
-      if (selectedName !== starterAtSelection || opponentType !== type) return;
-      if (opponentHP === 0) {
-        battleMessage.textContent = "공격자가 기절했어요. 다른 타입을 선택해 주세요.";
-        return;
-      }
+      const controller = new AbortController();
+      const { signal } = controller;
+      activeAttack = controller;
+      try {
+        await selectOpponent(type, signal);
+        if (signal.aborted) return;
+        if (opponentHP === 0) {
+          battleMessage.textContent = "공격자가 기절했어요. 다른 타입을 선택해 주세요.";
+          return;
+        }
 
-      const baseDamage = Math.round(5 * Number(factor));
-      const damage = Math.min(outgoing ? opponentHP : hp, baseDamage);
-      if (outgoing) {
-        setOpponentHP(opponentHP - damage);
-      } else {
-        setHP(hp - damage);
+        const currentHP = outgoing ? opponentHP : hp;
+        const damage = Math.min(currentHP, Math.round(5 * Number(factor)));
+        const nextHP = currentHP - damage;
+        const [move] = moves[moveType];
+        battleMessage.textContent = move + "!";
+        await showAttack(moveType, damage, Boolean(outgoing), signal);
+        if (signal.aborted) return;
+
+        // Keep gameplay HP authoritative while the visible meter counts down.
+        if (outgoing) opponentHP = nextHP;
+        else hp = nextHP;
+        await animateHealth(outgoing ? opponentMeter : hpMeter, outgoing ? opponentValue : hpValue,
+          currentHP, nextHP, signal);
+        if (signal.aborted) return;
+        if (outgoing) setOpponentHP(nextHP);
+        else setHP(nextHP);
+
+        battleMessage.textContent = move + (damage
+          ? (nextHP === 0 ? " · 기절!" : "")
+          : " · 효과가 없어요.");
+      } finally {
+        if (activeAttack === controller) activeAttack = undefined;
       }
-      showAttack(moveType, damage, Boolean(outgoing));
-      const fainted = outgoing ? opponentHP === 0 : hp === 0;
-      battleMessage.textContent = moves[moveType][0] + (damage
-        ? (fainted ? " · 기절!" : "")
-        : " · 효과가 없어요.");
     }
 
     function resetForStarter(name) {
+      activeAttack?.abort();
       resetBattleLayout();
       selectedName = name;
       captureResult.textContent = "";
