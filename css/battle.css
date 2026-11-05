@@ -227,3 +227,5 @@
   padding: 0.25rem;
 }
 .effect-picker p { font-size: 0.8rem; }
+
+.move-frames.move-beam { height: 4rem; }
