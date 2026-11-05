@@ -9,22 +9,22 @@
   };
   // Sheet rows follow this order. Angles and heights describe the projectile path.
   const moves = {
-    노말: { reach: 0.15 }, 불꽃: { reach: 0.25, duration: 180 }, 물: { duration: 600, beam: true },
-    전기: { reach: 0, duration: 175 },
+    노말: { reach: 0.15 }, 불꽃: { arc: 22, duration: 180 }, 물: { duration: 600, beam: true },
+    전기: { wave: 12, cycles: 3, duration: 175 },
     풀: { wave: 18, cycles: 1, duration: 260, since: 7 },
-    얼음: { reach: 0, fall: 65 }, 격투: { reach: 0, fall: 20 },
-    독: { reach: 0.12, since: 3 }, 땅: { arc: 48 }, 비행: { reach: 0.15 },
-    에스퍼: { beam: true }, 벌레: {},
-    바위: { reach: 0, fall: 85 }, 고스트: { reach: 0, fall: -25 },
-    드래곤: { beam: true, since: 4 }, 악: { reach: 0.08 },
-    강철: { reach: 0.2 }, 페어리: { reach: 0, since: 6 },
+    얼음: { reach: 0, fall: 65 }, 격투: { reach: 0.2, arc: 12 },
+    독: { reach: 0.12, since: 3 }, 땅: { arc: 48 }, 비행: { reach: 0.5, arc: 34 },
+    에스퍼: { wave: 8, cycles: 2 }, 벌레: { reach: 0.55, wave: 16, cycles: 2 },
+    바위: { reach: 0, fall: 85 }, 고스트: { reach: 0.45, wave: 21, cycles: 1.5 },
+    드래곤: { wave: 11, cycles: 2, since: 4 }, 악: { reach: 0.08 },
+    강철: { reach: 0.45, arc: 24 }, 페어리: { arc: 36, since: 6 },
   };
   const rows = Object.keys(moves);
   const sheets = new Map();
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=water-jet-3", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=mixed-effects-1", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
