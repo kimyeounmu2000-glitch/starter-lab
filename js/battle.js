@@ -1,7 +1,40 @@
 (() => {
   "use strict";
 
-  const { moves, attackers, spriteBase, effectSprites } = window.StarterLab.data;
+  const { moves, attackers, spriteBase } = window.StarterLab.data;
+
+  // Each glyph is a 3 × 5 bitmap, ordered from 0 to 9, then slash.
+  const healthGlyphs = [
+    "111101101101111", "010110010010111", "111001111100111", "111001111001111",
+    "101101111001001", "111100111001111", "111100111101111", "111001010010010",
+    "111101111101111", "111101111001111", "001001010100100",
+  ];
+  const healthSprites = new Map();
+
+  function healthSprite(text) {
+    if (!healthSprites.has(text)) {
+      let path = "";
+      let width = 0;
+      for (const character of text) {
+        if (character === " ") {
+          width += 2;
+          continue;
+        }
+        const glyph = healthGlyphs[character === "/" ? 10 : Number(character)];
+        [...glyph].forEach((pixel, index) => {
+          if (pixel === "1") path += "M" + (width + index % 3 + 1) + " " + (Math.floor(index / 3) + 1) + "h1v1h-1z";
+        });
+        width += 4;
+      }
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + (width + 1) * 2
+        + '" height="14" viewBox="0 0 ' + (width + 1) + ' 7" shape-rendering="crispEdges">'
+        + '<path d="' + path + '" stroke="#202127" stroke-width="0.8" fill="white"/></svg>';
+      healthSprites.set(text, 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');
+    }
+    return healthSprites.get(text);
+  }
+
+  const { prepare, isAdaptation } = window.StarterLab.moveEffects;
 
   window.StarterLab.createBattle = ({ specimen, generation, choices }) => {
     const grass = document.querySelector(".encounter-grass");
@@ -15,9 +48,9 @@
     const hpValue = document.querySelector("#hp-value");
     const battleMessage = document.querySelector("#battle-message");
     const attackEffect = document.querySelector("#attack-effect");
+    const effectStyle = document.querySelector("#effect-style");
 
-    let hitAnimation;
-    let lungeAnimation;
+    let activeAttack;
 
     let hp = maxHP;
     let opponentHP = maxHP;
@@ -34,15 +67,23 @@
       return ratio <= 0.1 ? "critical" : ratio <= 0.5 ? "warning" : "safe";
     }
 
+    function renderHealth(meter, label, value) {
+      meter.value = value;
+      meter.dataset.health = healthColor(value);
+      const text = value + " / " + maxHP;
+      if (label.dataset.pixelHealth === text) return;
+      label.textContent = text;
+      label.dataset.pixelHealth = text;
+      label.style.backgroundImage = healthSprite(text);
+    }
+
     function setOpponentHP(value) {
       opponentHP = value;
-      opponentMeter.value = value;
-      opponentValue.textContent = value + " / " + maxHP;
-      opponentMeter.dataset.health = healthColor(value);
+      renderHealth(opponentMeter, opponentValue, value);
       opponentSprite.classList.toggle("is-fainted", value === 0);
     }
 
-    async function selectOpponent(type) {
+    async function selectOpponent(type, signal) {
       if (type === opponentType) return;
       const firstEntrance = opponent.hidden;
       opponentType = type;
@@ -70,11 +111,14 @@
         ], timing));
       }
 
+      const cancelEntrance = () => animations.forEach((animation) => animation.cancel());
+      signal.addEventListener("abort", cancelEntrance, { once: true });
       enteringBattle = true;
       playfield.classList.add("is-entering");
       try {
         await Promise.allSettled(animations.map((animation) => animation.finished));
       } finally {
+        signal.removeEventListener("abort", cancelEntrance);
         enteringBattle = false;
         playfield.classList.remove("is-entering");
       }
@@ -82,75 +126,81 @@
 
     function setHP(value) {
       hp = value;
-      hpMeter.value = hp;
-      hpValue.textContent = hp + " / " + maxHP;
-      hpMeter.dataset.health = healthColor(hp);
+      renderHealth(hpMeter, hpValue, hp);
       specimen.classList.toggle("is-fainted", hp === 0);
       throwButton.disabled = hp === 0;
     }
 
     function resetHP() {
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
       setHP(maxHP);
       battleMessage.textContent = "";
       attackEffect.replaceChildren();
     }
 
-    function showAttack(type, damage, outgoing) {
-      const [, color, motion] = moves[type];
-      attackEffect.replaceChildren();
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
-      if (reducedMotion.matches) return;
+    function animateAttack(element, frames, duration, signal, options = {}) {
+      const animation = element.animate(frames, { duration, easing: "steps(8, end)", ...options });
+      const cancel = () => animation.cancel();
+      signal.addEventListener("abort", cancel, { once: true });
+      return animation.finished.catch((error) => {
+        if (!signal.aborted) throw error;
+      }).finally(() => signal.removeEventListener("abort", cancel));
+    }
 
+    async function showAttack(type, damage, outgoing, style, signal) {
+      if (reducedMotion.matches) return;
       const source = outgoing ? specimen : opponentSprite;
       const target = outgoing ? opponentSprite : specimen;
       const scene = document.createElement("div");
       scene.className = outgoing ? "attack-scene is-outgoing" : "attack-scene";
       attackEffect.append(scene);
-      lungeAnimation = source.animate([
-        { translate: "0" },
-        { translate: outgoing ? "-1.6rem 0.6rem" : "1.6rem -0.6rem", offset: 0.45 },
-        { translate: "0" },
-      ], { duration: 420, easing: "steps(8, end)", composite: "add" });
-      const effect = document.createElement("div");
-      effect.className = "attack-particles " + motion;
-      const sprite = document.createElement("canvas");
-      sprite.width = sprite.height = 7;
-      const paint = sprite.getContext("2d");
-      const palette = ["transparent", color, "#fff2b8"];
-      effectSprites[type].split("/").forEach((row, y) => {
-        [...row].forEach((pixel, x) => {
-          paint.fillStyle = palette[Number(pixel)];
-          paint.fillRect(x, y, 1, 1);
-        });
+
+      const origin = source.getBoundingClientRect();
+      const destination = target.getBoundingClientRect();
+      const dx = origin.left + origin.width / 2 - destination.left - destination.width / 2;
+      const dy = origin.top + origin.height / 2 - destination.top - destination.height / 2;
+      const bounds = scene.getBoundingClientRect();
+      const x = destination.left + destination.width / 2 - bounds.left;
+      const y = destination.top + destination.height / 2 - bounds.top;
+      const frames = prepare(type, style, scene, x, y, dx, dy, signal);
+
+      try {
+        await frames.flight();
+        if (signal.aborted || !damage) return;
+
+        const hit = animateAttack(target, [
+          { filter: "brightness(2.4)", opacity: 1, offset: 0 },
+          { filter: "brightness(1)", opacity: 0.2, offset: 0.23 },
+          { filter: "brightness(1)", opacity: 1, offset: 0.43 },
+          { filter: "brightness(1)", opacity: 0.2, offset: 0.62 },
+          { filter: "brightness(1)", opacity: 1, offset: 0.82 },
+          { filter: "brightness(1)", opacity: 1, offset: 1 },
+        ], 145, signal, { composite: "add" });
+        await Promise.all([hit, frames.impact()]);
+      } finally {
+        scene.remove();
+      }
+    }
+
+    async function animateHealth(meter, label, from, to, signal) {
+      if (reducedMotion.matches || from === to || signal.aborted) return;
+      const start = performance.now();
+      await new Promise((resolve) => {
+        let frame;
+        function finish() {
+          cancelAnimationFrame(frame);
+          signal.removeEventListener("abort", finish);
+          resolve();
+        }
+        function update(now) {
+          const progress = Math.min(1, (now - start) / 260);
+          const value = Math.ceil(from + (to - from) * progress);
+          renderHealth(meter, label, value);
+          if (progress === 1) finish();
+          else frame = requestAnimationFrame(update);
+        }
+        signal.addEventListener("abort", finish, { once: true });
+        frame = requestAnimationFrame(update);
       });
-      for (let index = 0; index < 3; index += 1) {
-        const particle = index === 0 ? sprite : sprite.cloneNode();
-        if (index > 0) particle.getContext("2d").drawImage(sprite, 0, 0);
-        effect.append(particle);
-      }
-      scene.append(effect);
-      if (damage) {
-        const impact = document.createElement("div");
-        impact.className = "pixel-hit";
-        const spark = document.createElement("span");
-        spark.className = "pixel-hit-spark";
-        impact.append(spark);
-        scene.append(impact);
-        effect.addEventListener("animationend", () => scene.remove(), { once: true });
-        const restingOpacity = (outgoing ? opponentHP : hp) === 0 ? 0.45 : 1;
-        hitAnimation = target.animate([
-          { opacity: restingOpacity, offset: 0 },
-          { opacity: 0.08, offset: 0.2 },
-          { opacity: restingOpacity, offset: 0.4 },
-          { opacity: 0.08, offset: 0.65 },
-          { opacity: restingOpacity, offset: 1 },
-        ], { duration: 320, delay: 330, easing: "steps(2, end)" });
-      } else {
-        effect.addEventListener("animationend", () => scene.remove(), { once: true });
-      }
     }
 
     let selectedName;
@@ -169,7 +219,7 @@
       const inBattlefield = playfield.contains(fighter);
       fighter.addEventListener("pointerdown", (event) => {
         if (drag || event.button !== 0) return;
-        if (inBattlefield && (enteringBattle || throwButton.disabled)) return;
+        if (inBattlefield && (activeAttack || enteringBattle || throwButton.disabled)) return;
         fighter.setPointerCapture(event.pointerId);
         const transform = getComputedStyle(fighter).transform;
         const { m41, m42 } = new DOMMatrixReadOnly(transform === "none" ? "" : transform);
@@ -204,9 +254,7 @@
     }
 
     async function throwBall() {
-      if (enteringBattle || drag || throwButton.disabled) return;
-      hitAnimation?.cancel();
-      lungeAnimation?.cancel();
+      if (activeAttack || enteringBattle || drag || throwButton.disabled) return;
       attackEffect.replaceChildren();
       throwButton.disabled = true;
       generation.disabled = true;
@@ -290,36 +338,53 @@
 
     async function handleTypeAttack(event) {
       const button = event.target.closest(".type-attack");
-      if (!button || enteringBattle || drag || (throwButton.disabled && hp > 0)) return;
+      if (!button || activeAttack || enteringBattle || drag || (throwButton.disabled && hp > 0)) return;
       if (hp === 0) {
         battleMessage.textContent = "기절했어요. 스타팅 포켓몬을 다시 선택해 주세요.";
         return;
       }
 
       const { type, factor, moveType, outgoing } = button.dataset;
-      const starterAtSelection = selectedName;
-      await selectOpponent(type);
-      if (selectedName !== starterAtSelection || opponentType !== type) return;
-      if (opponentHP === 0) {
-        battleMessage.textContent = "공격자가 기절했어요. 다른 타입을 선택해 주세요.";
-        return;
-      }
+      const controller = new AbortController();
+      const { signal } = controller;
+      activeAttack = controller;
+      try {
+        await selectOpponent(type, signal);
+        if (signal.aborted) return;
+        if (opponentHP === 0) {
+          battleMessage.textContent = "공격자가 기절했어요. 다른 타입을 선택해 주세요.";
+          return;
+        }
 
-      const baseDamage = Math.round(5 * Number(factor));
-      const damage = Math.min(outgoing ? opponentHP : hp, baseDamage);
-      if (outgoing) {
-        setOpponentHP(opponentHP - damage);
-      } else {
-        setHP(hp - damage);
+        const currentHP = outgoing ? opponentHP : hp;
+        const damage = Math.min(currentHP, Math.round(5 * Number(factor)));
+        const nextHP = currentHP - damage;
+        const [move] = moves[moveType];
+        const style = effectStyle.value;
+        const adaptation = isAdaptation(moveType, style) ? " · 창작 대체 연출" : "";
+        battleMessage.textContent = move + "!" + adaptation;
+        await showAttack(moveType, damage, Boolean(outgoing), style, signal);
+        if (signal.aborted) return;
+
+        // Keep gameplay HP authoritative while the visible meter counts down.
+        if (outgoing) opponentHP = nextHP;
+        else hp = nextHP;
+        await animateHealth(outgoing ? opponentMeter : hpMeter, outgoing ? opponentValue : hpValue,
+          currentHP, nextHP, signal);
+        if (signal.aborted) return;
+        if (outgoing) setOpponentHP(nextHP);
+        else setHP(nextHP);
+
+        battleMessage.textContent = move + (damage
+          ? (nextHP === 0 ? " · 기절!" : "")
+          : " · 효과가 없어요.") + adaptation;
+      } finally {
+        if (activeAttack === controller) activeAttack = undefined;
       }
-      showAttack(moveType, damage, Boolean(outgoing));
-      const fainted = outgoing ? opponentHP === 0 : hp === 0;
-      battleMessage.textContent = moves[moveType][0] + (damage
-        ? (fainted ? " · 기절!" : "")
-        : " · 효과가 없어요.");
     }
 
     function resetForStarter(name) {
+      activeAttack?.abort();
       resetBattleLayout();
       selectedName = name;
       captureResult.textContent = "";

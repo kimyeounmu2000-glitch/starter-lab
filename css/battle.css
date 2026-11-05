@@ -97,72 +97,6 @@
   image-rendering: pixelated;
 }
 
-.battle-hud { width: min(85%, 18rem); margin: 1.25rem auto 0; }
-.battle-hud label { display: flex; justify-content: space-between; font-size: 0.9rem; }
-#pokemon-hp {
-  --hp-color: #278341;
-  appearance: none;
-  width: 100%;
-  height: 0.8rem;
-  border: 2px solid #202127;
-  background: #dcdde2;
-}
-#pokemon-hp[data-health="warning"] { --hp-color: #d77a12; }
-#pokemon-hp[data-health="critical"] { --hp-color: #c6263d; }
-#pokemon-hp::-webkit-progress-bar { background: #dcdde2; }
-#pokemon-hp::-webkit-progress-value { background: var(--hp-color); }
-#pokemon-hp::-moz-progress-bar { background: var(--hp-color); }
-.specimen.is-fainted { filter: grayscale(1); opacity: 0.45; }
-#battle-message { min-height: 1.5em; }
-
-#attack-effect { position: absolute; z-index: 3; inset: 0; display: grid; place-items: center; pointer-events: none; }
-.attack-particles { font-size: clamp(1.75rem, 6vw, 3.75rem); font-weight: bold; text-shadow: 2px 2px white; animation: attack-pulse 460ms ease-out both; }
-.attack-particles.fall { animation-name: attack-fall; }
-.attack-particles.impact { animation-name: attack-impact; }
-.attack-particles.burst { animation-name: attack-burst; }
-.attack-particles.bite { animation-name: attack-bite; }
-@keyframes attack-pulse { from { scale: 0.3; } to { scale: 1.6; opacity: 0; } }
-@keyframes attack-fall { from { translate: 0 -5rem; } 65% { translate: 0 0; } to { opacity: 0; } }
-@keyframes attack-impact { from { scale: 0.6; rotate: -35deg; } 40% { scale: 1.25; rotate: 15deg; } to { opacity: 0; } }
-@keyframes attack-burst { 0%, 45% { opacity: 1; } 25%, 100% { opacity: 0; } 100% { scale: 1.5; } }
-@keyframes attack-bite { from { translate: 0 -2rem; letter-spacing: 1rem; } 45% { translate: 0 0; letter-spacing: 0; } to { opacity: 0; } }
-
-.attack-particles {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  animation-duration: 560ms;
-  animation-timing-function: steps(12, end);
-}
-.attack-particles canvas {
-  width: clamp(1.5rem, 6vw, 3.5rem);
-  height: auto;
-  image-rendering: pixelated;
-}
-.attack-particles canvas:nth-child(2) { scale: 1.45; translate: 0 -0.45rem; }
-.attack-particles canvas:nth-child(3) { scale: 0.75; translate: 0 0.65rem; }
-.attack-particles.burst canvas:first-child { rotate: -24deg; }
-.attack-particles.burst canvas:last-child { rotate: 25deg; }
-.attack-particles.fall canvas:first-child { translate: 0 -1.2rem; }
-.attack-particles.bite canvas:not(:nth-child(2)) { opacity: 0.55; }
-
-.attack-scene {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-}
-.attack-scene .attack-particles {
-  position: absolute;
-  left: var(--starter-x, 50%);
-  top: var(--starter-y, 50%);
-  transform: translate(-50%, -50%);
-  animation-delay: 180ms;
-  animation-fill-mode: none;
-}
-.attack-scene.is-outgoing .attack-particles { left: 27%; top: 66%; }
-
-.battle-hud, .opponent-hud { font-family: inherit; }
 .playfield.has-opponent {
   --starter-x: 74%;
   --starter-y: 33%;
@@ -197,95 +131,34 @@
   image-rendering: pixelated;
 }
 .opponent-sprite.is-fainted { filter: grayscale(1); opacity: 0.45; }
-.opponent-hud {
-  position: absolute;
-  top: 27%;
-  left: 78%;
-  width: clamp(4.5rem, 10vw, 6rem);
-  padding: 0.3rem;
-  background: #fffdf8;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  z-index: 1;
-}
-.opponent-hud label { display: flex; justify-content: space-between; gap: 0.25rem; }
-#opponent-hp {
-  --hp-color: #278341;
-  appearance: none;
-  display: block;
-  width: 100%;
-  height: 0.55rem;
-  border: 2px solid #202127;
-  background: #dcdde2;
-}
-#opponent-hp[data-health="warning"] { --hp-color: #d77a12; }
-#opponent-hp[data-health="critical"] { --hp-color: #c6263d; }
-#opponent-hp::-webkit-progress-bar { background: #dcdde2; }
-#opponent-hp::-webkit-progress-value { background: var(--hp-color); }
-#opponent-hp::-moz-progress-bar { background: var(--hp-color); }
-
-
-.has-opponent .battle-hud {
-  position: absolute;
-  z-index: 1;
-  top: calc(var(--starter-y) - 2rem);
-  right: calc(100% - var(--starter-x) + var(--fighter-size) * 0.28);
-  width: clamp(4.5rem, 14vw, 9rem);
-  margin: 0;
-  padding: 0.3rem;
-  background: #fffdf8;
-}
-.has-opponent .battle-hud label {
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
 
 .playfield { --fighter-size: min(clamp(12.74rem, 47.32vw, 20.02rem), 48%); }
 
+.battle-hud { width: min(85%, 18rem); margin: 1.25rem auto 0; }
+.battle-hud label { display: flex; justify-content: space-between; font-size: 0.9rem; }
+:is(#pokemon-hp, #opponent-hp) {
+  --hp-color: #278341;
+  appearance: none;
+  width: 100%;
+  height: 0.8rem;
+  border: 2px solid #202127;
+  background: #dcdde2;
+}
+:is(#pokemon-hp, #opponent-hp)[data-health="warning"] { --hp-color: #d77a12; }
+:is(#pokemon-hp, #opponent-hp)[data-health="critical"] { --hp-color: #c6263d; }
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-bar { background: #dcdde2; }
+:is(#pokemon-hp, #opponent-hp)::-webkit-progress-value { background: var(--hp-color); }
+:is(#pokemon-hp, #opponent-hp)::-moz-progress-bar { background: var(--hp-color); }
+.specimen.is-fainted { filter: grayscale(1); opacity: 0.45; }
+#battle-message { min-height: 1.5em; }
+
+#attack-effect { position: absolute; z-index: 3; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .attack-scene {
-  --hit-x: var(--starter-x, 50%);
-  --hit-y: var(--starter-y, 50%);
-  --approach-x: -7rem;
-  --approach-y: 2.5rem;
-}
-.attack-scene.is-outgoing {
-  --hit-x: 27%;
-  --hit-y: 66%;
-  --approach-x: 7rem;
-  --approach-y: -2.5rem;
-}
-.attack-scene .attack-particles.stream { animation-name: battle-projectile; }
-@keyframes battle-projectile {
-  0% { translate: var(--approach-x) 0; scale: 0.6; opacity: 0; }
-  15% { opacity: 1; }
-  55% { translate: 0 0; scale: 1.15; opacity: 1; }
-  100% { translate: 0 0; scale: 1.35; opacity: 0; }
-}
-.pixel-hit {
   position: absolute;
-  left: var(--hit-x);
-  top: var(--hit-y);
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: grid;
   place-items: center;
 }
-.pixel-hit > span { grid-area: 1 / 1; }
-.pixel-hit-spark {
-  width: clamp(3rem, 9vw, 5rem);
-  aspect-ratio: 1;
-  background: radial-gradient(#fff 20%, #ffe294 21% 46%, #ff982f 47%);
-  clip-path: polygon(45% 0, 55% 0, 55% 30%, 75% 12%, 86% 24%, 70% 43%, 100% 43%, 100% 57%, 70% 57%, 86% 76%, 75% 88%, 55% 70%, 55% 100%, 45% 100%, 45% 70%, 25% 88%, 14% 76%, 30% 57%, 0 57%, 0 43%, 30% 43%, 14% 24%, 25% 12%, 45% 30%);
-  animation: battle-spark 260ms steps(5, end) 330ms both;
-}
-@keyframes battle-spark {
-  0% { opacity: 0; scale: 0.25; }
-  25% { opacity: 1; scale: 0.8; }
-  65% { opacity: 0.8; scale: 1.15; }
-  100% { opacity: 0; scale: 1.45; }
-}
-
-
 .has-opponent .battle-hud, .has-opponent .opponent-hud {
   position: absolute;
   z-index: 1;
@@ -306,15 +179,7 @@
   left: 71%;
   transform: translate(-50%, -50%);
 }
-.has-opponent :is(.battle-hud, .opponent-hud) label { justify-content: end; font-size: inherit; }
-.has-opponent :is(#pokemon-hp, #opponent-hp) {
-  box-sizing: border-box;
-  display: block;
-  height: 0.65rem;
-}
 .playfield > .opponent-hud[hidden] { display: none; }
-.playfield.is-entering :is(.battle-hud, .opponent-hud),
-.playfield:has(.specimen.is-dragging) .battle-hud { visibility: hidden; }
 
 .battle-hud, .opponent-hud { position: relative; }
 .battle-hud label, .opponent-hud label,
@@ -345,7 +210,64 @@
   transition: transform 300ms ease-out;
 }
 .opponent-sprite.is-dragging { cursor: grabbing; transition: none; }
-.playfield:has(.opponent-sprite.is-dragging) .opponent-hud { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .opponent-sprite { transition: none; }
+}
+
+[data-pixel-health] {
+  min-width: 3.25rem;
+  height: 14px;
+  color: transparent;
+  text-shadow: none;
+  background-position: right center;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+@media (forced-colors: active) {
+  [data-pixel-health] { background: none; color: CanvasText; }
+}
+
+.move-frames {
+  position: absolute;
+  width: clamp(5.85rem, 20.28vw, 9.36rem);
+  height: auto;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+}
+.effect-picker { margin-block: 1rem; }
+.effect-picker label { display: block; margin-bottom: 0.35rem; }
+.effect-picker select {
+  font: inherit;
+  color: inherit;
+  background: #fffdf8;
+  border: 1px solid #8c929e;
+  padding: 0.25rem;
+}
+.effect-picker p { font-size: 0.8rem; }
+
+.move-frames.move-beam { height: 6.24rem; }
+
+
+
+
+
+
+
+.electric-branches {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.electric-arcs {
+  position: absolute;
+  width: clamp(12rem, 38vw, 21rem);
+  height: auto;
+  transform: translate(-42%, -50%);
+  image-rendering: pixelated;
+  animation: electric-arcs-flash 180ms steps(2, end) infinite;
+}
+@keyframes electric-arcs-flash {
+  0%, 65% { opacity: 1; }
+  66%, 100% { opacity: 0.25; }
 }
