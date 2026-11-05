@@ -85,9 +85,9 @@ def frame(move,index,count,style,impact):
             else:
                 d.polygon([(x-3,y),(x-1,y-4),(x+4,y-2),(x+3,y+3),(x-2,y+4)],fill="#805033",outline="#b98851")
     elif move=="고스트":
-        top=39-round(t*32) if not impact else 7
-        d.rounded_rectangle((17,top,31,45),radius=5,fill="#da77a4",outline="#86325e",width=2)
-        d.line((24,top+6,24,41),fill="#ffa9c7",width=2)
+        top=10
+        d.rounded_rectangle((17,top,31,37),radius=5,fill="#da77a4",outline="#86325e",width=2)
+        d.line((24,top+6,24,33),fill="#ffa9c7",width=2)
     elif move=="불꽃":
         for i in range(detail+1):
             a=i*math.pi*2/(detail+1)+0.3
@@ -120,12 +120,20 @@ def frame(move,index,count,style,impact):
                 d.rectangle((x,y,x+2,y+4),fill="#a450d6")
     elif move=="풀":
         for i in range(detail):
-            part=leaf().rotate(-25+round(t*55),resample=Image.Resampling.NEAREST,expand=True)
+            part=leaf()
             stamp(im,part,9+i*7,14+i%3*9)
     elif move=="페어리":
         heart=Image.new("RGBA",(40,36));h=ImageDraw.Draw(heart)
         h.polygon([(20,34),(1,16),(1,8),(8,1),(15,1),(20,7),(25,1),(32,1),(39,8),(39,16)],fill="#f581b7",outline="#af3974")
-        h.rectangle((7,6,13,9),fill="#ffe5f2")
+        mask=heart.getchannel("A")
+        stripes=Image.new("RGBA",heart.size)
+        stripe_draw=ImageDraw.Draw(stripes)
+        for stripe_y in (9,21):
+            stripe_draw.rectangle((0,stripe_y,39,stripe_y+4),fill="#fff8fb")
+        stripes.putalpha(Image.composite(stripes.getchannel("A"),Image.new("L",heart.size),mask))
+        heart.alpha_composite(stripes)
+        h=ImageDraw.Draw(heart)
+        h.rectangle((7,6,13,8),fill="#ffe5f2")
         size=round((0.5+0.5*t)*40) if not impact else round(40*(1-0.15*t))
         heart=heart.resize((size,round(size*.9)),Image.Resampling.NEAREST)
         stamp(im,heart,24,24)
@@ -138,7 +146,7 @@ def frame(move,index,count,style,impact):
         wing=Image.new("RGBA",(48,48));w=ImageDraw.Draw(wing)
         w.polygon([(5,32),(14,16),(40,5),(32,18),(38,15),(28,28),(33,24),(23,35),(15,39)],fill="#d9e6ef",outline="#8dabc6")
         for i in range(3):w.line((12+i*5,32,29+i*3,14),fill="#a4baca",width=2)
-        im=wing.rotate(-45+round(t*90),resample=Image.Resampling.NEAREST)
+        im=wing
     if impact and move not in ("노말","물","드래곤","에스퍼","격투","바위","땅","독"):
         # Fade out the completed move rather than restarting its trajectory.
         im.putalpha(im.getchannel("A").point(lambda value:round(value*(1-t*.85))))

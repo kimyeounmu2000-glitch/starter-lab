@@ -14,16 +14,16 @@
     불꽃: { reach: 0, duration: 300 },
     물: { duration: 600, beam: true },
     전기: { reach: 0, duration: 300 },
-    풀: { duration: 300, since: 7 },
+    풀: { duration: 300, since: 7, passThrough: true },
     얼음: { reach: 0, duration: 350 },
     격투: { reach: 0, duration: 300 },
     독: { reach: 0, duration: 300, since: 3 },
     땅: { arc: 25, duration: 300 },
-    비행: { reach: 0, duration: 300 },
+    비행: { duration: 300, passThrough: true },
     에스퍼: { beam: true, duration: 450 },
     벌레: { reach: 0.45, duration: 300 },
     바위: { reach: 0, duration: 350 },
-    고스트: { reach: 0, duration: 350 },
+    고스트: { reach: 0, duration: 350, sweepUp: true },
     드래곤: { beam: true, duration: 500, since: 4 },
     악: { reach: 0, duration: 300 },
     강철: { reach: 0, duration: 300 },
@@ -34,7 +34,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=distinct-moves-4", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=sweep-moves-5", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
@@ -109,6 +109,7 @@
         }
         return playFrames(canvas, await waitForSheet(sheet, signal), row, 0, style.flight, (move.duration ?? 245) * effectDurationScale, signal, (t) => {
           if (move.beam) return [0, 0];
+          if (move.sweepUp) return [0, 28 - 56 * t];
           const remaining = 1 - t;
           const reach = move.reach ?? 1;
           const arc = (move.arc ?? 0) * Math.sin(Math.PI * t);
@@ -129,7 +130,10 @@
         canvas.style.rotate = "";
         canvas.style.transform = "";
         canvas.style.transformOrigin = "";
-        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, 175 * effectDurationScale, signal, () => [0, 0]);
+        return playFrames(canvas, await waitForSheet(sheet, signal), row, style.flight, style.impact, 175 * effectDurationScale, signal, (t) => {
+          if (move.passThrough) return [-dx * 0.35 * t, -dy * 0.35 * t];
+          return move.sweepUp ? [0, -28] : [0, 0];
+        });
       },
     };
   }
