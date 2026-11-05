@@ -32,7 +32,26 @@ def frame(move,index,count,style,impact):
             a=i*math.pi/8;length=r if i%2==0 else r/3
             points.append((24+round(math.cos(a)*length),24+round(math.sin(a)*length)))
         d.polygon(points,fill="#fff1b6",outline="#e7a03b")
-    elif move in ("물","드래곤","에스퍼"):
+    elif move=="드래곤":
+        if not impact:
+            # A stable straight core with angular violet energy streaks.
+            d.rectangle((0,15,47,33),fill="#6941bf")
+            d.rectangle((0,18,47,30),fill="#b392f5")
+            d.rectangle((0,21,47,27),fill="#e9ddff")
+            d.rectangle((0,23,47,25),fill="#ffffff")
+            for i in range(4):
+                x=(i*13+index*4)%48
+                d.line([(x,16),(x+4,13),(x+9,13)],fill="#85e6ff",width=2)
+                d.line([(x,32),(x+5,35),(x+10,35)],fill="#d5a3ff",width=2)
+        else:
+            for i in range(8):
+                angle=i*math.pi/4
+                inner=4+round(t*5);outer=10+round(t*12)
+                x1,y1=24+round(math.cos(angle)*inner),24+round(math.sin(angle)*inner)
+                x2,y2=24+round(math.cos(angle)*outer),24+round(math.sin(angle)*outer)
+                d.line((x1,y1,x2,y2),fill="#a3dfff" if i%2 else "#b78cff",width=3)
+            d.rectangle((19,19,29,29),fill="#f4ecff")
+    elif move in ("물","에스퍼"):
         palettes={
             "물":("#2383df","#7de1ff","#f3ffff"),
             "드래곤":("#6544c6","#9b83f1","#b6f8ff"),

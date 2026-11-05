@@ -34,7 +34,7 @@
   function loadSheet(style) {
     if (!sheets.has(style)) {
       const image = new Image();
-      image.src = new URL("../assets/effects/" + style + "/moves.png?v=electric-horn-7", scriptUrl);
+      image.src = new URL("../assets/effects/" + style + "/moves.png?v=dragon-core-8", scriptUrl);
       sheets.set(style, image.decode().then(() => image, () => {
         sheets.delete(style);
         return null;
